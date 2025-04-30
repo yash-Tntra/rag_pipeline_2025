@@ -1,3 +1,4 @@
+import asyncio
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.retrievers import BM25Retriever
 from langchain_community.vectorstores import Milvus
@@ -26,7 +27,7 @@ class EmbeddingVectorStore:
         # embeddings = OpenAIEmbeddings(openai_api_key=OpenAi.OPEN_API_KEY.value)
         return embeddings, docs
     
-    def vector_store_service(self, embeddings, docs):
+    async def vector_store_service(self, embeddings, docs):
         # vectorstore = Milvus.from_documents(
         #     documents=docs,
         #     embedding=embeddings,
@@ -35,14 +36,15 @@ class EmbeddingVectorStore:
         #     },
         #     drop_old=True,  # Drop the old Milvus collection if it exists
         # )
-        vectorstore = FAISS.from_documents(docs, embeddings)
-        bm25_retriever = BM25Retriever.from_documents(docs)
+        vectorstore_task = asyncio.to_thread(FAISS.from_documents, docs, embeddings)
+        bm25_task = asyncio.to_thread(BM25Retriever.from_documents, docs)
+        vectorstore, bm25_retriever = await asyncio.gather(vectorstore_task, bm25_task)
 
         return  vectorstore, bm25_retriever
     
     def embedding_vector_store_service(self, documents):
         embeddings, docs = self.embedding_service(documents)
-        vectorstore, bm25_retriever = self.vector_store_service(embeddings, docs)
+        vectorstore, bm25_retriever = asyncio.run(self.vector_store_service(embeddings, docs))
         return vectorstore, bm25_retriever
         
     

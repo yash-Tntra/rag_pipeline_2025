@@ -1,0 +1,58 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+    -   id: check-yaml
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+
+
+-   repo: https://github.com/PyCQA/flake8.git
+    rev: 6.1.0
+    hooks:
+    -   id: flake8
+        args: ['--config', '.flake8']
+        exclude: 'models|migrations'
+
+
+- repo: local
+  hooks:
+    - id: print_queries
+      name: Check that @print_queries is not used
+      types: [python]
+      entry: '@print_queries'
+      language: pygrep
+
+
+- repo: local
+  hooks:
+    - id: breakpoint
+      name: Check that breakpoint is not used
+      types: [python]
+      entry: 'breakpoint()'
+      language: pygrep
+
+- repo: local
+  hooks:
+    - id: rdb
+      name: Check that rdb is not used
+      types: [python]
+      entry: 'rdb.set_trace()'
+      language: pygrep
+
+
+- repo: local
+  hooks:
+    - id: log_request_response
+      name: Check that log_request_response decorator is not used
+      types: [python]
+      entry: 'log_request_response()'
+      language: pygrep
+
+- repo: local
+  hooks:
+    - id: print_queries_context_manager
+      name: Check that PrintQueries is not used
+      types: [python]
+      entry: 'PrintQueries'
+      language: pygrep
