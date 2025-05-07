@@ -1,19 +1,22 @@
 import asyncio
 import logging
 from langchain.chains.conversation.base import ConversationChain
+from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.retrieval_qa.base import RetrievalQA
 from langchain_community.llms.ollama import Ollama
 from langchain_core.callbacks import StreamingStdOutCallbackHandler
-from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_core.prompts import MessagesPlaceholder, HumanMessagePromptTemplate
+from langchain_core.messages import AIMessage
+from langchain_core.prompts import HumanMessagePromptTemplate
+from datetime import datetime
 
-from web_search_service import WebScrapService
+from rag_services.enahnce_and_clean_data_service import EnhanceService
+from rag_services.web_search_service import WebScrapService
 from langchain.memory import ConversationBufferMemory, CombinedMemory
-from embedding_vector_store_service import EmbeddingVectorStore
+from rag_services.embedding_vector_store_service import EmbeddingVectorStore
 from langchain.retrievers import EnsembleRetriever, ContextualCompressionRetriever
 from langchain_community.retrievers import BM25Retriever
-from constant.prompt_constant import ROUTE_SELECTOR
 from langchain.prompts import ChatPromptTemplate
+from constant.prompt_constant import ROUTE_SELECTOR
 
 
 # from langchain_ollama import OllamaLLM   #todo use later
@@ -22,20 +25,34 @@ from langchain.prompts import ChatPromptTemplate
 class RagPipeline:
 
     def __init__(self):
+        self.current_datetime = datetime.now()
+
         self.llm = Ollama(model= "llama3", callbacks=[StreamingStdOutCallbackHandler()], temperature=0.2)
         self.memory = ConversationBufferMemory(
             memory_key="history",
             return_messages=True
         )
+        # self.intro_message = AIMessage(f"""
+        # The current default date and time is {self.current_datetime}.
+        # always consider the previous conversation to give answer of user question.
+        # and answer only user question  only no more text and comments
+        # """
+        # )
+        # # # todo: we can pass perviious conversations
+        #
+        # self.memory.chat_memory.add_messages(self.intro_message)
+
         self.qa = ConversationChain(llm=self.llm, memory=self.memory, verbose=True)
 
     def check_where_to_go(self, prompt):
-        finance_query_classification = ROUTE_SELECTOR.format(prompt)
-        system_selector = self.llm.invoke(finance_query_classification)
-        print(f"prompt is {query} : and selector is {system_selector}")
+        # chat_history = self.memory.load_memory_variables({})["history"]
+        query_classification = ROUTE_SELECTOR.format(prompt)
+        system_selector = self.llm.invoke(query_classification)
+        logging.debug(f"selector is {system_selector}")
         return system_selector
 
     def execute_query(self, prompt):
+        # llm_query = EnhanceService(self.llm).prompt_enhance_service(prompt)
         keyword = self.check_where_to_go(prompt)
         keyword_executor = {
             "Rag": self.rag_call,
@@ -45,13 +62,15 @@ class RagPipeline:
 
     def rag_call(self, query):
         # web scrap module and documents
+        # prompt = f" FYI Please consider the current time and date: {self.current_datetime}"
+        # rag_query = query + prompt
         documents = asyncio.run(WebScrapService().duckduckgo_search_and_scrape(query))
         vectorstore, bm25_retriever = EmbeddingVectorStore().embedding_vector_store_service(documents)
         retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k": 2})
 
         hybrid_retriever = EnsembleRetriever(
                 retrievers=[retriever, bm25_retriever],
-                weights=[0.3, 0.7]
+                weights=[0.5, 0.5]
             )
 
         # reranker = LLMReranker(llm=self.llm)
@@ -66,13 +85,15 @@ class RagPipeline:
             chain_type="stuff",
             retriever=hybrid_retriever,
             memory=self.memory,
-            verbose= True
+            verbose=True
         )
-        response = rag_chain.run(query)
-        return response
+        result = rag_chain.run(query)
+        # enhance_response = EnhanceService(self.llm).review_llm_result(query, result)
+        return result
 
     def llm_call(self, query):
         result = self.qa.run(query)
+        # enhance_response = EnhanceService(self.llm).review_llm_result(query, result)
         return  result
 
 
@@ -87,8 +108,9 @@ class RagPipeline:
 # query = "what happend chandola talav (ahemedabad) on 29 april 2025 give me all details about it"
 
 pipeline = RagPipeline()
+
 while True:
-    query = input("human: ")
+    query = input()
     # system_message = SystemMessage(content=(
     #     "You are a helpful assistant."
     # ))
@@ -96,10 +118,12 @@ while True:
     #     f"{query}"
     # ))
     #
+
     prompt_template = ChatPromptTemplate.from_messages([
-        HumanMessagePromptTemplate.from_template("{query}")
+        HumanMessagePromptTemplate.from_template(f"{query}")
     ])
     prompt = prompt_template.format(query=query)
-        
+
     response = pipeline.execute_query(prompt)
     print(response)
+    print('---------------DONE----------------------')

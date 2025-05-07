@@ -10,3 +10,12 @@ tiktoken==0.9.0
 rank-bm25==0.2.2
 pre_commit==4.0.1
 flake8==7.1.1
+
+environs~=14.1.1
+langchain~=0.3.24
+langchain-core~=0.3.56
+requests~=2.32.3
+Unidecode~=1.4.0
+langchain-text-splitters~=0.3.8
+trafilatura~=2.0.0
+lxml-html-clean~=0.4.2
