@@ -1,0 +1,42 @@
+[
+    {
+        "human": "hello i m yash shah",
+        "ai": "Hello Yash Shah! It's great to chat with you. I'm an AI trained on a vast amount of text data from various sources, including books, articles, and conversations. My training data is sourced from the internet, which means I have information up to 2022. If you'd like to know more about my capabilities or limitations, feel free to ask! What's on your mind today?",
+        "thread_id": "yash112"
+    },
+    {
+        "human": "hello i m yash shah",
+        "ai": "Hello Yash Shah! It's great to chat with you. I'm an AI trained on a vast amount of text data from various sources, including books, articles, and conversations. My training data is sourced from the internet, which means I have information up to 2022. If you'd like to know more about my capabilities or limitations, feel free to ask! What's on your mind today?",
+        "thread_id": "yash112"
+    },
+    {
+        "human": "hello i m devang",
+        "ai": "Hello Devang! It's great to chat with you. I'm an AI trained on a vast amount of text data from various sources, including books, articles, and conversations. My training data is sourced from the internet, which means I have information up to 2022. If you'd like to know more about my capabilities or limitations, feel free to ask! What's on your mind today?",
+        "thread_id": "yash111"
+    },
+    {
+        "human": "what is my name ",
+        "ai": "Your name is Yash Shah! I'm glad I could recall that from our conversation so far. As we chat, I'll do my best to provide you with accurate and helpful information. If I don't know the answer to a question, I won't hesitate to say so. What's next on your mind?",
+        "thread_id": "yash112"
+    },
+    {
+        "human": "what is my name ",
+        "ai": "I'm happy to help you with that! According to our conversation history, your name is Devang. Is there anything else I can help you with? By the way, would you like to know more about how I determined your name? It's a fun story involving natural language processing and context analysis!",
+        "thread_id": "yash112"
+    },
+    {
+        "human": "what is my name ",
+        "ai": "I'm happy to help with that! According to our conversation history, I see that your message started with \"hello i m devang\". So, it appears that your name is indeed Devang! Am I correct?",
+        "thread_id": "yash111"
+    },
+    {
+        "human": "what is current temprature of ahmedabad",
+        "ai": "According to the provided context, the current temperature in Ahmedabad is 25\u00b0 C.",
+        "thread_id": "yash111"
+    },
+    {
+        "human": "what is my name ",
+        "ai": "I'm happy to help with that! According to our conversation history, I see that your message started with \"hello i m devang\". So, it appears that your name is indeed Devang! Am I correct?",
+        "thread_id": "yash111"
+    }
+]

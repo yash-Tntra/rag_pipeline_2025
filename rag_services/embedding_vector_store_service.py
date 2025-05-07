@@ -1,9 +1,13 @@
 import asyncio
+import os
+
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.retrievers import BM25Retriever
 from langchain_community.vectorstores import Milvus
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
 from langchain_community.vectorstores import FAISS
+
 
 
 class EmbeddingVectorStore:
@@ -33,7 +37,17 @@ class EmbeddingVectorStore:
         #     },
         #     drop_old=True,  # Drop the old Milvus collection if it exists
         # )
-        vectorstore_task = asyncio.to_thread(FAISS.from_documents, docs, embeddings)
+        persist_dir = "./chroma_db"
+        
+        # vectorstore_task = asyncio.to_thread(
+        #     Chroma.from_documents,
+        #     docs, embeddings,
+        #     **{"persist_directory": persist_dir}
+        # )
+        vectorstore_task = asyncio.to_thread(
+            FAISS.from_documents,
+            docs, embeddings,
+        )
         bm25_task = asyncio.to_thread(BM25Retriever.from_documents, docs)
         vectorstore, bm25_retriever = await asyncio.gather(vectorstore_task, bm25_task)
 

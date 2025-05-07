@@ -107,7 +107,6 @@ class WebScrapService:
         urls = self.search_duckduckgo_urls(query)
         # urls = self.yahoo_search(query)
         # urls = self.google_search(query)
-        print(urls)
         docs = await self.scrape_urls_with_webbase_loader(urls)
         # tasks = [asyncio.to_thread(EnhanceService(llm).clean_urls_data_service, doc, query) for doc in docs]
         # documents = await asyncio.gather(*tasks)
