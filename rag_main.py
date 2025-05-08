@@ -98,10 +98,11 @@ class RagPipeline:
         return  result
     
     def handle_conversation(self):
-        ConversationMemoryStorage().pass_conversation_memory(self.memory, 'yash111')
+        # thread_id = str(uuid.uuid4())
+        thread_id = 'a69a97ba-1c56-4d5a-bfd8-df1f33eed044'
+        ConversationMemoryStorage().pass_conversation_memory(self.memory, thread_id)
         print("Ask me:)--------------------")
         query = input()
-        thread_id = str(uuid.uuid4())
         response = pipeline.execute_query(query, thread_id)
         return response
             
