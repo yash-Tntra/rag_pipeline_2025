@@ -1,61 +1,46 @@
-import  os, json
+from langchain.schema import BaseMessage
+from langchain.schema.messages import messages_to_dict, messages_from_dict
+from langchain_core.chat_history import BaseChatMessageHistory
+from pymongo import MongoClient
 
-from langchain_core.messages import HumanMessage, AIMessage
 
-from db_service.mongo_db_service import MongoDBService
-
-
-class ConversationMemoryStorage:
+class ConversationMemoryStorage(BaseChatMessageHistory):
+    def __init__(self, session_id: str, memory):
+        self.session_id = session_id
+        self.connection = "mongodb://localhost:27017/"
+        self.client = MongoClient(self.connection)
+        self.collection = self.client['memory_db']['conversations']
+        self.messages = []
+        
+        existing = self.collection.find_one({"session_id": self.session_id})
+        if existing:
+            self.messages = messages_from_dict(existing["messages"])
+            memory.chat_memory.messages = self.messages
+        
+        else:
+            self.collection.insert_one({
+                "session_id": self.session_id,
+                "messages": messages_to_dict(self.messages)
+            })
     
-    def __init__(self):
-        pass
-        # self.storage = "chat_history.json"
-        # if not os.path.exists(self.storage):
-        #     with open(self.storage, "w") as file:
-        #         json.dump(None, file, indent=4)
-
-    def store_conversation_memory_data(self, thread_id, chat_history):
-        data = {'human': chat_history[-2].content,
-                 'ai': chat_history[-1].content,
-                 'thread_id': thread_id
-                }
-        store = MongoDBService().store_data(data)
-        print(store)
+    def add_message(self, message: BaseMessage) -> None:
+        self.messages.append(message)
+        self.collection.update_one(
+            {"session_id": self.session_id},
+            {"$set": {"messages": messages_to_dict(self.messages)}}
+        ),
+        print(f"Message added to session: {self.session_id}")
         
-        
+       
     
-    # def store_conversation_memory_data(self, thread_id, chat_history):
-    #     data = [{'human': chat_history[-2].content,
-    #              'ai': chat_history[-1].content,
-    #              'thread_id': 'yash111', }]
-    #     with open(self.storage, "r+") as file:
-    #         try:
-    #             file_content = file.read().strip()
-    #             existing_data = json.loads(file_content) if file_content else []
-    #         except json.JSONDecodeError:
-    #             existing_data = []
-    #         existing_data.extend(data)
-    #         file.seek(0)
-    #         json.dump(existing_data, file, indent=4)
-    #     return "Successfully stored conversation."
-
-    def pass_conversation_memory(self, memory, thread_id):
-        filtered_data = MongoDBService().get_data(thread_id)
-        
-        # with open(self.storage, "r") as file:
-        #     file_content = file.read().strip()
-        if not filtered_data:
-            print("no data there")
-            return  "no data"
-        #     file_data = json.loads(file_content)
-        #     filtered_data = [item for item in file_data if item.get("thread_id") == thread_id]
-        for data in filtered_data:
-            stored_conversation = [
-                HumanMessage(content=data.get('human')),
-                AIMessage(content=data.get('ai'))
-            ]
-            memory.chat_memory.messages.extend(stored_conversation)
-        return "successfully added previous data into memory"
+    def clear(self) -> None:
+        self.messages = []
+        self.collection.update_one(
+            {"session_id": self.session_id},
+            {"$set": {"messages": []}}
+        )
+        print(f"Message added to session: {self.session_id}")
+ 
                 
            
         

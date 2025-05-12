@@ -6,6 +6,7 @@ import json
 from langchain.chains.conversation.base import ConversationChain
 from langchain.chains import ConversationalRetrievalChain
 from langchain.chains.retrieval_qa.base import RetrievalQA
+from langchain_community.chat_message_histories import MongoDBChatMessageHistory
 from langchain_community.llms.ollama import Ollama
 from langchain_core.callbacks import StreamingStdOutCallbackHandler
 from langchain_core.messages import AIMessage, HumanMessage
@@ -55,7 +56,7 @@ class RagPipeline:
         # web scrap module and documents
         # prompt = f" FYI Please consider the current time and date: {self.current_datetime}"
         # rag_query = query + prompt
-        documents = asyncio.run(WebScrapService().duckduckgo_search_and_scrape(query))
+        documents = asyncio.run(WebScrapService().duckduckgo_search_and_scrape(query.content))
         vectorstore, bm25_retriever = EmbeddingVectorStore().embedding_vector_store_service(documents)
         retriever = vectorstore.as_retriever(
             search_type="similarity",
@@ -85,24 +86,29 @@ class RagPipeline:
             memory=self.memory,
             verbose=True
         )
-        result = rag_chain.run(query)
+        result = rag_chain.run(query.content)
+        result = AIMessage(content=result)
         # enhance_response = EnhanceService(self.llm).review_llm_result(query, result)
-        ConversationMemoryStorage().store_conversation_memory_data(thread_id, self.chat_history)
-        return result
+        ConversationMemoryStorage(thread_id, self.memory).add_message(result)
+        
 
     def llm_call(self, query, thread_id):
-        result = self.qa.run(query)
-    
+        breakpoint()
+        result = self.qa.run(query.content)
+        result = AIMessage(content=result)
+        ConversationMemoryStorage(thread_id, self.memory).add_message(result)
+
         # enhance_response = EnhanceService(self.llm).review_llm_result(query, result)
-        ConversationMemoryStorage().store_conversation_memory_data(thread_id, self.chat_history)
+        # ConversationMemoryStorage().store_conversation_memory_data(thread_id, self.chat_history)
         return  result
     
     def handle_conversation(self):
-        # thread_id = str(uuid.uuid4())
-        thread_id = 'a69a97ba-1c56-4d5a-bfd8-df1f33eed044'
-        ConversationMemoryStorage().pass_conversation_memory(self.memory, thread_id)
         print("Ask me:)--------------------")
         query = input()
+        # thread_id = str(uuid.uuid4())
+        thread_id = 'be0cbca2-7520-482f-bb00-66f22e7465b3'
+        query = HumanMessage(content=query)
+        ConversationMemoryStorage(thread_id, self.memory).add_message(query)
         response = pipeline.execute_query(query, thread_id)
         return response
             
